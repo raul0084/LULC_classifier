@@ -9,19 +9,6 @@ your patch-based CNN and pixel-based Random Forest, side by side.
 pip install -r requirements.txt
 ```
 
-Place your trained models here:
-
-```
-sentinel2_app/
-├── models/
-│   ├── cnn_model.pth   # full model, saved with torch.save(model, ...)
-│   └── rf_model.pkl    # saved with joblib.dump(rf, ...)
-├── app.py
-└── src/
-```
-
-Update `CNN_PATH` / `RF_PATH` in `app.py` if your filenames differ.
-
 ## Run
 
 ```bash
@@ -53,15 +40,8 @@ streamlit run app.py
 ## Known limitations / things to double check
 
 - Standardization is computed per-uploaded-image (matching the training
-  function), not from stored training-set statistics. If your models
-  were actually trained with fixed global mean/std (not per-image), swap
-  the standardization step in `src/preprocessing.py` accordingly.
+  function), not from stored training-set statistics. 
 - The CNN assumes one label per 16x16 patch (image classification, not
-  per-pixel segmentation). If your CNN instead outputs a per-pixel mask
-  per patch, `classify_cnn_patchwise` in `src/model_utils.py` needs a
-  small change to keep the full per-pixel output instead of an argmax
-  per patch.
+  per-pixel segmentation). 
 - Edge patches are reflect-padded to reach a multiple of 16, then cropped
   back — this only affects the last row/column of patches at image edges.
-- No nodata masking is applied; pixels outside the actual beach/AOI will
-  still get classified.
