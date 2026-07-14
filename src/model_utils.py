@@ -158,10 +158,28 @@ def classify_rf_pixelwise(rf_model, img: torch.Tensor) -> np.ndarray:
     """
     Classify a standardized (C, H, W) image pixel-by-pixel with the RF.
 
+    The RF was trained with 1-indexed class labels (1..N), while CLASSES
+    is 0-indexed (0..N-1) to match the CNN's argmax output and the color
+    map. We remap predictions using rf_model.classes_ -- the sorted array
+    of label values the RF actually saw during training -- rather than
+    naively subtracting 1, so this stays correct even if the raw labels
+    aren't a clean contiguous 1..N range.
+
     Returns:
-        class_map: (H, W) int array of predicted class indices.
+        class_map: (H, W) int array of predicted class indices, 0-indexed
+        to match CLASSES.
     """
     c, h, w = img.shape
     features = img.permute(1, 2, 0).reshape(-1, c).numpy()  # (H*W, C)
     preds = rf_model.predict(features)
+
+    # rf_model.classes_ is sorted ascending, e.g. [1, 2, 3, 4, 5]. Position
+    # of a label within that array is exactly its 0-indexed class index,
+    # assuming training used labels in the same order as CLASSES.
+    if hasattr(rf_model, "classes_"):
+        preds = np.searchsorted(rf_model.classes_, preds)
+    else:
+        # Fallback: assume a simple 1-indexed -> 0-indexed shift.
+        preds = preds - 1
+
     return preds.reshape(h, w).astype(np.int64)
