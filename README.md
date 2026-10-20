@@ -1,69 +1,109 @@
-# Sentinel-2 Beach Land Cover Classifier (Demo)
+# Sentinel-2 Beach Land Cover Classification
 
-> **This is a lightweight demo version of my MSc thesis work**, built for
-> portfolio/display purposes — not the full research pipeline. It's meant
-> to give recruiters, collaborators, or anyone curious a hands-on way to
-> see the classification approach in action, without needing the thesis
-> database, validation pipeline, or GIS stack behind it.
+A lightweight Streamlit application for classifying coastal land cover from Sentinel-2 satellite imagery using Convolutional Neural Networks (CNNs) and Random Forest (RF) models.
 
-Streamlit app that classifies an uploaded Sentinel-2 GeoTIFF using both
-a patch-based CNN and a pixel-based Random Forest, side by side.
+## Overview
 
-## Setup
+This project is a simplified demonstration of the land-cover classification models developed as part of my MSc thesis on coastal monitoring and shoreline evolution in Barcelona.
+
+The application packages pretrained model artifacts in an interactive interface where users can upload satellite imagery, visualize classification results, compare model predictions, and export georeferenced maps.
+
+This repository contains a **lite version of the models and inference workflow**, designed for demonstration and reproducibility. It does not necessarily include the latest or final models from the thesis. The full thesis covers the broader research methodology and processing pipeline.
+
+## Objectives
+
+- Demonstrate CNN- and Random Forest-based land-cover classification using Sentinel-2 imagery.
+- Explore spectral feature engineering through NDVI, MNDWI, BSI, MBI, and NDBI.
+- Compare classification outputs through interactive maps, class distributions, and model agreement.
+- Generate georeferenced GeoTIFF outputs for further analysis in GIS software.
+- Provide a reproducible, containerized application that can be run locally.
+
+## Using the Project
+
+### Requirements
+
+- Docker Desktop or another working Docker installation.
+- A Sentinel-2 GeoTIFF containing 10 bands in the expected order.
+- Optionally, a GeoJSON file containing areas of interest for zonal statistics.
+
+The required band order is:
+
+`B02, B03, B04, B05, B06, B07, B08, B8A, B11, B12`
+
+### Running the application
+
+Clone or download the repository and open a terminal in its root directory.
+
+Build the Docker image:
 
 ```bash
-pip install -r requirements.txt
+./build.sh
 ```
 
-## Run
+Run the application:
 
 ```bash
-streamlit run app.py
+./run.sh
 ```
 
-## Input requirements
+Open [http://localhost:8501](http://localhost:8501) in your browser.
 
-- GeoTIFF with exactly 10 bands, in this order:
-  `B02, B03, B04, B05, B06, B07, B08, B8A, B11, B12`
-- If your raster stores bands in a different order, reorder them
-  (e.g. with `rasterio` or GDAL) before uploading.
+To stop the application, press `Ctrl+C` in the terminal.
 
-## What it does
+### Application workflow
 
-1. Reads the 10 raw bands.
-2. Computes 5 spectral indices (NDVI, MNDWI, BSI, MBI, NDBI) using the
-   exact same band indices as training (note: "nir" in the indices
-   uses B8A, not B08 — this matches the original training code).
-3. Standardizes all 15 channels using the image's own per-band mean/std.
-4. **CNN**: tiles the image into patches and predicts one class per
-   patch, painting that class across the whole patch. Patch stride is
-   adjustable in the UI (1–16 px) so you can trade off speed vs. spatial
-   detail — stride 16 is fast and blocky (non-overlapping tiles), lower
-   strides give smoother, more granular output at the cost of more
-   inference passes.
-5. **RF**: predicts one class per pixel directly from the 15-channel
-   feature vector.
-6. Displays both classified maps, a legend, an agreement map, class
-   distribution bar charts, download each classification as a georeferenced
-   GeoTIFF, and counts the pixels per class in an AOI when you upload
-   a GeoJSON with polygons.
+1. Upload a compatible 10-band Sentinel-2 GeoTIFF.
+2. Configure the available CNN inference settings.
+3. Run the CNN and Random Forest classifications.
+4. Explore the classification maps, class distributions, and agreement between predictions.
+5. Download the georeferenced classification outputs.
+6. Optionally, upload GeoJSON polygons to summarize predicted class counts within areas of interest.
 
-## What's simplified vs. the full thesis pipeline
+### Repository structure
 
-- No PostGIS/database connection — this app works on a single uploaded
-  image at a time, with no persistence between sessions.
-- No zonal statistics, transect analysis, or multi-date change tracking
-  (that lives in the separate thesis validation/monitoring pipeline).
-- Standardization stats and model weights are baked in; there's no
-  retraining or fine-tuning UI.
+```text
+classifier_app/
+├── app.py
+├── models/
+│   ├── cnn_model.pth
+│   └── rf_model.pkl
+├── src/
+│   ├── architectures.py
+│   ├── model_utils.py
+│   ├── preprocessing.py
+│   ├── visualization.py
+│   └── zonal_stats.py
+├── pyproject.toml
+├── Dockerfile
+├── .dockerignore
+├── build.sh
+├── run.sh
+└── README.md
+```
 
-## Known limitations of this version
+## Building on the Project
 
-- Standardization is computed per-uploaded-image (matching the training
-  function), not from stored training-set statistics.
-- The CNN assumes one label per patch (image classification, not
-  per-pixel segmentation) — smaller strides interpolate this visually
-  but don't add true per-pixel resolution.
-- Edge patches are reflect-padded to reach a multiple of the patch size,
-  then cropped back — this only affects the last row/column of patches
-  at image edges.
+### Technology stack
+
+- **Python:** application logic and model inference.
+- **PyTorch:** CNN architecture and inference.
+- **scikit-learn:** Random Forest classification.
+- **Rasterio and GeoPandas:** raster processing and geospatial analysis.
+- **NumPy and pandas:** numerical processing and data manipulation.
+- **Matplotlib and Streamlit:** visualization and interactive interface.
+- **Docker:** reproducible application deployment.
+
+### Extending the application
+
+The application provides a starting point for further development, including:
+
+- Integrating updated or retrained models from the full research pipeline.
+- Adding independent validation datasets and quantitative accuracy metrics.
+- Supporting multi-temporal image comparisons and coastal change analysis.
+- Extending geospatial summaries and exporting results for downstream GIS workflows.
+
+### Relationship to the MSc thesis
+
+The full MSc thesis investigates coastal monitoring and shoreline evolution in Barcelona using satellite imagery and geospatial analysis. It contains the broader research methodology and processing pipeline beyond the simplified inference workflow provided here.
+
+This repository complements that work by offering an accessible, interactive demonstration of land-cover classification. Its included models and outputs should be treated as exploratory and should not be assumed to represent the final validated thesis results.

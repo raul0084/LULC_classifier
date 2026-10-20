@@ -55,12 +55,19 @@ def read_geotiff(file_bytes: bytes):
 def write_geotiff(class_map: np.ndarray, profile: dict) -> bytes:
     """Encode a classified (H, W) map as a single-band GeoTIFF, in memory."""
     out_profile = profile.copy()
-    out_profile.update(count=1, dtype="uint8", compress="lzw")
+    out_profile.update(
+        count=1,
+        dtype="uint8",
+        compress="lzw",
+        nodata=99,
+    )
+
     buf = io.BytesIO()
     with rasterio.io.MemoryFile() as memfile:
         with memfile.open(**out_profile) as dst:
             dst.write(class_map.astype("uint8")[np.newaxis, :, :])
         buf.write(memfile.read())
+
     buf.seek(0)
     return buf.getvalue()
 

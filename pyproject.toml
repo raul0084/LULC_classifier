@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sentinel-2-beach-classifier"
+version = "0.1.0"
+description = "Streamlit demo for Sentinel-2 beach land-cover classification using CNN and Random Forest models."
+requires-python = ">=3.11"
+dependencies = [
+    "streamlit>=1.35",
+    "rasterio>=1.3",
+    "numpy>=1.24",
+    "torch>=2.1",
+    "joblib>=1.3",
+    "scikit-learn>=1.3",
+    "matplotlib>=3.7",
+    "geopandas>=0.14",
+    "pandas>=2.0",
+    "pyproj>=3.5",
+]
+
+[tool.setuptools]
+py-modules = ["app"]
+
+[tool.setuptools.packages.find]
+include = ["src*"]
